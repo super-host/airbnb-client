@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jennclee/airbnb-client.git"
+    "url": "git+https://github.com/super-host/airbnb-client"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jennclee/airbnb-client/issues"
+    "url": "https://github.com/super-host/airbnb-client/issues"
   },
-  "homepage": "https://github.com/jennclee/airbnb-client#readme",
+  "homepage": "https://github.com/super-host/airbnb-client#readme",
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
