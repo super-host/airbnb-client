@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha --bail tests/ServerSpec.js --exit",
+    // "test": "mocha --bail tests/ServerSpec.js --exit",
+    "test": "./node_modules/.bin/mocha --reporter spec --exit",
     "build": "webpack d --watch",
     "start": "nodemon server/index.js"
   },
@@ -15,7 +16,7 @@
     "type": "git",
     "url": "git+https://github.com/super-host/airbnb-client"
   },
-  "author": "",
+  "author": "Jennifer Lee",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/super-host/airbnb-client/issues"
