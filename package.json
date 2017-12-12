@@ -7,7 +7,6 @@
     "test": "tests"
   },
   "scripts": {
-    // "test": "mocha --bail tests/ServerSpec.js --exit",
     "test": "./node_modules/.bin/mocha --reporter spec --exit",
     "build": "webpack d --watch",
     "start": "nodemon server/index.js"
