@@ -7,26 +7,31 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha --bail tests/ServerSpec.js --exit",
-    "build": "webpack d --watch",
+    "test": "mocha test --reporter spec --exit",
     "start": "nodemon server/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jennclee/airbnb-client.git"
+    "url": "git+https://github.com/super-host/airbnb-client"
   },
-  "author": "",
+  "author": "Jennifer Lee",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jennclee/airbnb-client/issues"
+    "url": "https://github.com/super-host/airbnb-client/issues"
   },
-  "homepage": "https://github.com/jennclee/airbnb-client#readme",
+  "homepage": "https://github.com/super-host/airbnb-client#readme",
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
+    "cassandra-driver": "^3.3.0",
     "chai": "^4.1.2",
+    "eslint": "^4.13.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-react": "^7.5.1",
     "mocha": "^4.0.1",
     "nodemon": "^1.12.5",
     "react": "^16.2.0",
@@ -36,6 +41,8 @@
     "webpack": "^3.10.0"
   },
   "dependencies": {
-    "express": "^4.16.2"
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "path": "^0.12.7"
   }
 }
