@@ -39,9 +39,9 @@ module.exports = {
       });
     });
   },
-  findUser: (username) => {
+  findUser: (userId) => {
     return new Promise((resolve, reject) => {
-      models.instance.users.findOne({ username }, (err, user) => {
+      models.instance.users.findOne({ userId }, (err, user) => {
         if (err) reject(err);
         resolve(user);
       });
@@ -59,8 +59,8 @@ module.exports = {
     beds,
     overallRating,
     accomodationType,
-    hostID,
-    availabilityPreferences
+    userID,
+    blackoutDates
   ) => {
     return new Promise((resolve, reject) => {
       const listing = new models.instance.listings({
@@ -75,8 +75,8 @@ module.exports = {
         beds,
         overallRating,
         accomodationType,
-        hostID,
-        availabilityPreferences,
+        userID,
+        blackoutDates,
       });
 
       listing.save((err, res) => {
@@ -90,9 +90,9 @@ module.exports = {
   },
   findListing: (listingId) => {
     return new Promise((resolve, reject) => {
-      models.instance.listings.findOne({ listingId }, (err, user) => {
+      models.instance.listings.findOne({ listingId }, (err, result) => {
         if (err) reject(err);
-        resolve(user);
+        resolve(result);
       });
     });
   },
