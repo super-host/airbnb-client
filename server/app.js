@@ -9,10 +9,14 @@ app.use(bodyParser.json());
 
 app.get('/listings', (req, res) => {
   // get search listings from DB
+  const { location, priceMin, priceMax, accomodationType, beds } = req.headers;
   // get booking availability from Bookings service GET /bookings/:listingID
+  db.search(location, priceMin, priceMax, accomodationType, beds).then((results) => {
+    res.status(200).json(results);
+  });
 });
 
-app.get('/listing/:listingID', (req, res) => {
+app.get('/listings/:listingID', (req, res) => {
   let analyticsObj = {};
   // get listing information from db
   const { username } = req.headers;
@@ -32,18 +36,19 @@ app.get('/listing/:listingID', (req, res) => {
         hostId: result.id,
         superhostStatus: result.superhostStatus,
       };
-    }).then(() => {
-      // send view information to Analytics service POST /analytics/view/:listingID
-      axios.post('/analytics/view', {
-        analyticsObj,
-      }).then(() => {
-        console.log('Posted view to analytics!');
-      });
     });
+    // .then(() => {
+    // // send view information to Analytics service POST /analytics/view
+    // axios.post('ANALYTICS_SERVICE/view', {
+    //   analyticsObj,
+    // }).then(() => {
+    //   console.log('Posted view to analytics!');
+    // });
+    // });
   });
 });
 
-app.post('/listing', (req, res) => {
+app.post('/listings', (req, res) => {
   // send new listing information to Listings service POST /listing
   const { 
     location,
@@ -57,8 +62,8 @@ app.post('/listing', (req, res) => {
     beds,
     overallRating,
     accomodationType,
-    hostID,
-    availabilityPreferences,
+    userID,
+    blackOutDates,
   } = req.body;
   db.addListing(
     location,
@@ -72,23 +77,49 @@ app.post('/listing', (req, res) => {
     beds,
     overallRating,
     accomodationType,
-    hostID,
-    availabilityPreferences
+    userID,
+    blackOutDates
   ).then(() => {
-    res.status(200).send('POST to /listing successful');
+    res.status(200).send('POST to /listings successful');
   });
 });
 
-app.post('/user', (req, res) => {
+app.post('/users', (req, res) => {
   // send new user information to Listings service POST /user
   const { username } = req.body;
   db.addUser(username).then(() => {
-    res.status(200).send('POST to /user successful');
+    res.status(200).send('POST to /users successful');
   });
 });
 
-app.post('/booking/:listingID', (req, res) => {
-  // send booking information to Bookings service POST /booking/:listingID
+app.post('/bookings', (req, res) => {
+  // send booking information to Bookings service POST /bookings
+  // send listingID, userID, startDate, endData, pricePerDay
+  const { listingID, userID, startDate, endData, price } = req.body;
+  const bookingInfo = {
+    listingID, userID, startDate, endData, price,
+  };
+
+  axios.post('BOOKINGS_SERVICE/bookings', {
+    bookingInfo,
+  }).then(() => {
+    res.status(200).send('Posted booking info to bookings!');
+  });
+
+  db.findListing(listingId).then((result) => {
+    db.findUser(result.userId).then((result) => {
+      const bookingAnalyticsInfo = bookingInfo;
+      bookingAnalyticsInfo.userId = result.id;
+      bookingAnalyticsInfo.superhostStatus = result.superhostStatus;
+      return bookingAnalyticsInfo;
+    }).then((bookingAnalyticsInfo) => {
+      axios.post('ANALYTICS_SERVICE/booking', {
+        bookingAnalyticsInfo,
+      }).then(() => {
+        res.status(200).send('Posted booking info to analytics!');
+      });
+    });
+  });
 });
 
 module.exports = app;
