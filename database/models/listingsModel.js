@@ -1,7 +1,7 @@
 module.exports = {
   fields: {
     id: {
-      type: 'uuid',
+      type: 'text',
       default: { $db_function: 'uuid()' },
     },
     location: 'text',
@@ -11,20 +11,29 @@ module.exports = {
     maxGuests: 'int',
     roomType: 'text',
     bedrooms: 'int',
-    bathrooms: 'int',
+    bathrooms: 'float',
     beds: 'int',
     overallRating: 'float',
     accomodationType: 'text',
-    hostID: 'uuid',
+    userId: 'text',
     updatedAt: {
-      type: 'timestamp',
-      default: { $db_function: 'toTimestamp(now())' },
+      type: 'date',
+      default: { $db_function: 'toDate(timestamp)' },
     },
-    availabilityPreferences: {
-      type: 'map',
-      typeDef: '<timestamp, text>',
+    blackoutDates: {
+      type: 'list',
+      typeDef: '<text>',
     },
   },
-  key: [['location', 'accomodationType'], 'price', 'beds'],
-  indexes: ['id', 'price'],
+  key: [['id', 'location'], 'accomodationType', 'price', 'beds'],
+  indexes: ['accomodationType', 'price'],
+  // materialized_views: {
+  //   main: {
+  //     select: ['*'],
+  //     key: [['location', 'price'], 'accomodationType'],
+  //     filters: {
+  //       price: { $gte: new Date('2017-10-10') },
+  //     },
+  //   },
+  // },
 };

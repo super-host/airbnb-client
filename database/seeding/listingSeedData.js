@@ -1,28 +1,15 @@
 const fs = require('file-system');
 const faker = require('faker');
 const moment = require('moment');
+const uuidv4 = require('uuid/v4');
 
-const listingFields = [
-  'location',
-  'title',
-  'description',
-  'price',
-  'maxGuests',
-  'roomType',
-  'bedrooms',
-  'bathrooms',
-  'beds',
-  'overallRating',
-  'accomodationType',
-  'userId',
-  'blackoutDates',
-];
-
+const seedAmt = 1000;
 const priceMin = 50;
 const priceMax = 300;
 const numBlackoutDays = 10;
 const maxNumGuests = 10;
 const maxNumGuestsSplit = 6;
+const randDescription = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
 
 const accomodationTypes = [
   'apartment',
@@ -83,7 +70,7 @@ const blackoutDateGenerator = (numDays) => {
 let listings = [];
 
 const createListingsFile = () => {
-  for (let i = 0; i <= 1000; i++) {
+  for (let i = 0; i < seedAmt; i++) {
     const roomType = roomTypes[Math.floor(Math.random() * roomTypes.length)];
     let bedrooms;
     let bathrooms;
@@ -104,9 +91,10 @@ const createListingsFile = () => {
     const accomodation = accomodationTypes[Math.floor(Math.random() * accomodationTypes.length)];
 
     const listingObj = {
+      id: uuidv4(),
       location: cities[Math.floor(Math.random() * cities.length)],
       title: `${titleAdjectives[Math.floor(Math.random() * titleAdjectives.length)]} ${accomodation} ${titleEnding[Math.floor(Math.random() * titleEnding.length)]}`,
-      description: faker.lorem.sentence,
+      description: randDescription,
       price: priceGenerator(priceMin, priceMax),
       maxGuests,
       roomType,
@@ -115,13 +103,12 @@ const createListingsFile = () => {
       beds,
       overallRating: ratings[Math.floor(Math.random() * ratings.length)],
       accomodationType: accomodation,
-      // userId: ,
+      userId: uuidv4(),
       updatedAt: moment(faker.date.between('2015-01-01', '2016-4-30')).format('YYYY-MM-DD'),
       blackoutDates: blackoutDateGenerator(numBlackoutDays),
     };
     listings.push(listingObj);
   }
-  // console.log(listings);
   listings = JSON.stringify(listings);
   fs.writeFile('./fixtures/listings.json', listings, (err) => {
     if (err) throw err;

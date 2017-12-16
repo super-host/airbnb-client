@@ -11,11 +11,17 @@ const seedAmt = 1000;
 
 const createUsersFile = () => {
   for (let i = 0; i < seedAmt; i++) {
+    const hostStatus = isHost[Math.floor(Math.random() * isHost.length)];
+    let shstatus = false;
+    if (hostStatus) {
+      shstatus = superhostStatus[Math.floor(Math.random() * superhostStatus.length)];
+    }
+
     const userObj = {
       id: uuidv4(),
       username: username.generateUsername(),
       isHost: isHost[Math.floor(Math.random() * isHost.length)],
-      superhostStatus: superhostStatus[Math.floor(Math.random() * superhostStatus.length)],
+      superhostStatus: shstatus,
       updatedAt: faker.date.between('2016-01-01', '2016-12-31'),
     };
     users.push(userObj);
