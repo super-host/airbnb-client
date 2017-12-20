@@ -21,20 +21,37 @@ const ormConfig = {
 models.setDirectory(path.join(__dirname, '/models')).bindAsync({
   clientOptions: dbConfig,
   ormOptions: ormConfig,
-}).then(() => {
-  models.importAsync(path.join(__dirname, '../fixtures'), (err) => {
-    console.log('Error occurred: ', err);
-  }).then(() => {
-    console.log('Imported seeded data');
-  });
 });
+// .then(() => {
+//   models.importAsync(path.join(__dirname, '../fixtures'), (err) => {
+//     console.log('Error occurred: ', err);
+//   }).then(() => {
+//     console.log('Imported seeded data');
+//   });
+// });
 
 
 module.exports = {
-  addUser: (username) => {
+  doBatch: (queries) => {
+    return new Promise((resolve, reject) => {
+      resolve(models.doBatch(queries));
+    });
+  },
+  addUser: (userObj) => {
+    const {
+      id,
+      username,
+      is_host,
+      superhost_status,
+      updated_at,
+    } = userObj;
     return new Promise((resolve, reject) => {
       const user = new models.instance.users({
+        id,
         username,
+        is_host,
+        superhost_status,
+        updated_at,
       });
 
       user.save((err, res) => {
@@ -42,7 +59,6 @@ module.exports = {
           reject(err);
         }
         resolve(res);
-        console.log('Saved user!');
       });
     });
   },
@@ -54,23 +70,27 @@ module.exports = {
       });
     });
   },
-  addListing: (
-    location,
-    title,
-    description,
-    price,
-    maxGuests,
-    roomType,
-    bedrooms,
-    bathrooms,
-    beds,
-    overallRating,
-    accomodationType,
-    userId,
-    blackoutDates
-  ) => {
+  addListing: (listingObj) => {
+    const {
+      id,
+      location,
+      title,
+      description,
+      price,
+      maxGuests,
+      roomType,
+      bedrooms,
+      bathrooms,
+      beds,
+      overall_rating,
+      accomodation_type,
+      user_id,
+      updated_at,
+      blackout_dates,
+    } = listingObj;
     return new Promise((resolve, reject) => {
       const listing = new models.instance.listings({
+        id,
         location,
         title,
         description,
@@ -80,10 +100,11 @@ module.exports = {
         bedrooms,
         bathrooms,
         beds,
-        overallRating,
-        accomodationType,
-        userId,
-        blackoutDates,
+        overall_rating,
+        accomodation_type,
+        user_id,
+        updated_at,
+        blackout_dates,
       });
 
       listing.save((err, res) => {
@@ -91,7 +112,6 @@ module.exports = {
           reject(err);
         }
         resolve(res);
-        console.log('Saved listing!');
       });
     });
   },
@@ -103,15 +123,15 @@ module.exports = {
       });
     });
   },
-  search: (location, priceMin = 0, priceMax, accomodationType, beds) => {
+  search: (location, priceMin = 0, priceMax, accomodation_type, beds) => {
     return new Promise((resolve, reject) => {
-      // ****
-      // SEARCH BY PRICE RANGE
-      // priceMin, priceMax
-      // ****
-      models.instance.listings.find({
-        location, accomodationType, beds
-      }, (err, results) => {
+      const query = {
+        location,
+        price: { $gte: Number(priceMin), $lte: Number(priceMax) },
+        accomodation_type,
+        beds: Number(beds),
+      };
+      models.instance.listings.find(query, (err, results) => {
         if (err) reject(err);
         resolve(results);
       });

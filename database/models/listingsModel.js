@@ -8,32 +8,29 @@ module.exports = {
     title: 'text',
     description: 'text',
     price: 'int',
-    maxGuests: 'int',
-    roomType: 'text',
+    max_guests: 'int',
+    room_type: 'text',
     bedrooms: 'int',
     bathrooms: 'float',
     beds: 'int',
-    overallRating: 'float',
-    accomodationType: 'text',
-    userId: 'text',
-    updatedAt: {
-      type: 'date',
-      default: { $db_function: 'toDate(timestamp)' },
-    },
-    blackoutDates: {
+    overall_rating: 'float',
+    accomodation_type: 'text',
+    user_id: 'text',
+    updated_at: 'text',
+    blackout_dates: {
       type: 'list',
       typeDef: '<text>',
     },
   },
-  key: [['id', 'location'], 'accomodationType', 'price', 'beds'],
-  indexes: ['accomodationType', 'price'],
+  key: [['location', 'accomodation_type', 'beds'], 'price', 'id'],
+  indexes: ['location', 'accomodation_type', 'price', 'beds', 'id'],
   // materialized_views: {
   //   main: {
   //     select: ['*'],
-  //     key: [['location', 'price'], 'accomodationType'],
-  //     filters: {
-  //       price: { $gte: new Date('2017-10-10') },
-  //     },
+  //     key: [['location', 'accomodation_type', 'beds'], 'price', 'id'],
+  //     // filters: {
+  //     //   price: { $gte: new Date('2017-10-10') },
+  //     // },
   //   },
   // },
 };

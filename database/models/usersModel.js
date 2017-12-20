@@ -5,19 +5,19 @@ module.exports = {
       default: { '$db_function': 'uuid()' },
     },
     username: 'text',
-    isHost: {
+    is_host: {
       type: 'boolean',
       default: false,
     },
-    superhostStatus: {
+    superhost_status: {
       type: 'boolean',
       default: false,
     },
-    updatedAt: {
+    updated_at: {
       type: 'timestamp',
       default: { '$db_function': 'toTimestamp(now())' },
     },
   },
-  key: ['id', 'superhostStatus'],
-  indexes: ['username'],
+  key: ['id', 'superhost_status'],
+  indexes: ['id', 'superhost_status', 'username'],
 };

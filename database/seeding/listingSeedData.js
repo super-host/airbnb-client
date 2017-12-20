@@ -1,9 +1,12 @@
-const fs = require('file-system');
 const faker = require('faker');
 const moment = require('moment');
 const uuidv4 = require('uuid/v4');
+const db = require('../index.js');
 
-const seedAmt = 1000;
+const seedAmt = 300;
+const batchAmt = 10;
+// const seedAmt = 7000000;
+// const batchAmt = 2000;
 const priceMin = 50;
 const priceMax = 300;
 const numBlackoutDays = 10;
@@ -67,53 +70,64 @@ const blackoutDateGenerator = (numDays) => {
   return blackoutDates;
 };
 
-let listings = [];
+const createListingsFile = (count) => {
+  let counter = count || 0;
+  if (counter < seedAmt) {
+    const queries = [];
+    for (let j = 0; j < batchAmt; j++) {
+      const roomType = roomTypes[Math.floor(Math.random() * roomTypes.length)];
+      let bedrooms;
+      let bathrooms;
+      let beds;
+      let maxGuests;
 
-const createListingsFile = () => {
-  for (let i = 0; i < seedAmt; i++) {
-    const roomType = roomTypes[Math.floor(Math.random() * roomTypes.length)];
-    let bedrooms;
-    let bathrooms;
-    let beds;
-    let maxGuests;
-
-    if (roomType === 'Entire place') {
-      maxGuests = Math.floor(Math.random() * (maxNumGuests - 1) + 1);
-      bedrooms = Math.floor(Math.random() * (maxNumGuestsSplit - (maxNumGuestsSplit / 2)) + (maxNumGuestsSplit / 2));
-      bathrooms = Math.floor(Math.random() * (bedrooms - (bedrooms / 2)) + (bedrooms / 2));
-      beds = Math.floor(Math.random() * ((bedrooms * 2) - (bedrooms)) + (bedrooms));
-    } else {
-      maxGuests = Math.floor(Math.random() * 2 + 1);
-      bedrooms = 1;
-      bathrooms = 1;
-      beds = Math.floor(Math.random() * 2 + 1);
+      if (roomType === 'Entire place') {
+        maxGuests = Math.floor(Math.random() * (maxNumGuests - 1) + 1);
+        bedrooms = Math.floor(Math.random() * (maxNumGuestsSplit - (maxNumGuestsSplit / 2)) + (maxNumGuestsSplit / 2));
+        bathrooms = Math.floor(Math.random() * (bedrooms - (bedrooms / 2)) + (bedrooms / 2));
+        beds = Math.floor(Math.random() * ((bedrooms * 2) - (bedrooms)) + (bedrooms));
+      } else {
+        maxGuests = Math.floor(Math.random() * 2 + 1);
+        bedrooms = 1;
+        bathrooms = 1;
+        beds = Math.floor(Math.random() * 2 + 1);
+      }
+      const accomodation = accomodationTypes[Math.floor(Math.random() * accomodationTypes.length)];
+      
+      const listingObj = {
+        id: uuidv4(),
+        location: cities[Math.floor(Math.random() * cities.length)],
+        title: `${titleAdjectives[Math.floor(Math.random() * titleAdjectives.length)]} ${accomodation} ${titleEnding[Math.floor(Math.random() * titleEnding.length)]}`,
+        description: randDescription,
+        price: priceGenerator(priceMin, priceMax),
+        max_guests: maxGuests,
+        room_type: roomType,
+        bedrooms,
+        bathrooms,
+        beds,
+        overall_rating: ratings[Math.floor(Math.random() * ratings.length)],
+        accomodation_type: accomodation,
+        user_id: uuidv4(),
+        updated_at: moment(faker.date.between('2015-01-01', '2016-4-30')).format('YYYY-MM-DD'),
+        blackout_dates: blackoutDateGenerator(numBlackoutDays),
+      };
+      const query = db.addListing(listingObj);
+      queries.push(query);
     }
-    const accomodation = accomodationTypes[Math.floor(Math.random() * accomodationTypes.length)];
-
-    const listingObj = {
-      id: uuidv4(),
-      location: cities[Math.floor(Math.random() * cities.length)],
-      title: `${titleAdjectives[Math.floor(Math.random() * titleAdjectives.length)]} ${accomodation} ${titleEnding[Math.floor(Math.random() * titleEnding.length)]}`,
-      description: randDescription,
-      price: priceGenerator(priceMin, priceMax),
-      maxGuests,
-      roomType,
-      bedrooms,
-      bathrooms,
-      beds,
-      overallRating: ratings[Math.floor(Math.random() * ratings.length)],
-      accomodationType: accomodation,
-      userId: uuidv4(),
-      updatedAt: moment(faker.date.between('2015-01-01', '2016-4-30')).format('YYYY-MM-DD'),
-      blackoutDates: blackoutDateGenerator(numBlackoutDays),
-    };
-    listings.push(listingObj);
+    db.doBatch(queries, (err) => {
+      if (err) throw err;
+    }).then(() => {
+      counter += batchAmt;
+      console.log('Completed uploading batch ', counter, ' of ', seedAmt);
+      setTimeout(() => {
+        createListingsFile(counter);
+      }, 500);
+    });
   }
-  listings = JSON.stringify(listings);
-  fs.writeFile('./fixtures/listings.json', listings, (err) => {
-    if (err) throw err;
-    console.log('Listings json file saved');
-  });
 };
 
-createListingsFile();
+console.time('createListingsFile');
+setTimeout(() => {
+  createListingsFile();
+}, 5000);
+console.timeEnd('createListingsFile');
