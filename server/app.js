@@ -1,17 +1,26 @@
+require('newrelic');
 const express = require('express');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 const db = require('../database/index.js');
+const listSeed = require('../database/seeding/listingSeedData');
+const userSeed = require('../database/seeding/userSeedData');
 const axios = require('axios');
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(morgan('dev'));
+
+app.get('/', (req, res) => {
+  res.status(200).send('Started app!');
+});
 
 app.get('/listings', (req, res) => {
   // get search listings from DB
-  const { location, priceMin, priceMax, accomodationType, beds } = req.headers;
+  const { location, priceMin, priceMax, accomodation_type, beds } = req.headers;
   // get booking availability from Bookings service GET /bookings/:listingID
-  db.search(location, priceMin, priceMax, accomodationType, beds).then((results) => {
+  db.search(location, priceMin, priceMax, accomodation_type, beds).then((results) => {
     const searchListings = [];
     results.map((listing) => {
       return searchListings.push(listing.id);
@@ -35,8 +44,8 @@ app.get('/listings/:listingID', (req, res) => {
     res.status(200).json(result);
     analyticsObj = {
       city: result.location,
-      rating: result.overallRating,
-      accomodationType: result.accomodationType,
+      rating: result.overall_rating,
+      accomodation_type: result.accomodation_type,
       beds: result.beds,
       price: result.price,
     };
@@ -44,7 +53,7 @@ app.get('/listings/:listingID', (req, res) => {
     db.findUser(username).then((result) => {
       analyticsObj = {
         hostId: result.id,
-        superhostStatus: result.superhostStatus,
+        superhostStatus: result.superhost_status,
       };
     }).then(() => {
       axios.post('ANALYTICS_SERVICE/view', {
@@ -54,6 +63,8 @@ app.get('/listings/:listingID', (req, res) => {
   });
 });
 
+// ENDPOINT FOR AVAILABILITY CALENDAR
+
 app.post('/listings', (req, res) => {
   // send new listing information to Listings service POST /listing
   const { 
@@ -61,30 +72,32 @@ app.post('/listings', (req, res) => {
     title,
     description,
     price,
-    maxGuests,
-    roomType,
+    max_guests,
+    room_type,
     bedrooms,
     bathrooms,
     beds,
-    overallRating,
-    accomodationType,
-    userID,
-    blackOutDates,
+    overall_rating,
+    accomodation_type,
+    user_id,
+    updated_at,
+    blackout_dates,
   } = req.body;
   axios.post('LISTINGS_SERVICE/listings', {
     location,
     title,
     description,
     price,
-    maxGuests,
-    roomType,
+    max_guests,
+    room_type,
     bedrooms,
     bathrooms,
     beds,
-    overallRating,
-    accomodationType,
-    userID,
-    blackOutDates,
+    overall_rating,
+    accomodation_type,
+    user_id,
+    updated_at,
+    blackout_dates,
   }).then(() => {
     res.status(200).send('POST listing info to listings!');
   });
