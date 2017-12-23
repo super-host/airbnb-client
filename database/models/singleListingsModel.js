@@ -22,19 +22,5 @@ module.exports = {
       typeDef: '<text>',
     },
   },
-  key: ['location'],
-  materialized_views: {
-    location_acc: {
-      select: ['*'],
-      key: ['location', 'accomodation_type'],
-    },
-    location_beds: {
-      select: ['*'],
-      key: ['location', 'beds'],
-    },
-    location_price: {
-      select: ['*'],
-      key: ['location', 'price'],
-    },
-  },
+  key: ['id'],
 };

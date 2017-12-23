@@ -3,8 +3,8 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 const db = require('../index.js');
 
-const seedAmt = 300;
-const batchAmt = 10;
+const seedAmt = 100;
+const batchAmt = 50;
 // const seedAmt = 7000000;
 // const batchAmt = 2000;
 const priceMin = 50;
@@ -93,7 +93,7 @@ const createListingsFile = (count) => {
         beds = Math.floor(Math.random() * 2 + 1);
       }
       const accomodation = accomodationTypes[Math.floor(Math.random() * accomodationTypes.length)];
-      
+
       const listingObj = {
         id: uuidv4(),
         location: cities[Math.floor(Math.random() * cities.length)],

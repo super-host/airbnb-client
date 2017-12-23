@@ -18,6 +18,6 @@ module.exports = {
       default: { '$db_function': 'toTimestamp(now())' },
     },
   },
-  key: ['id', 'superhost_status'],
+  key: [['is_host', 'superhost_status'], 'id'],
   indexes: ['id', 'superhost_status', 'username'],
 };

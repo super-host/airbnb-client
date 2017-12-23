@@ -1,24 +1,36 @@
 const Promise = require('bluebird');
 const path = require('path');
-const models = require('./helpers/models');
-const q = require('./helpers/queries');
 
-const cassandra = require('cassandra-driver');
+const models = require('express-cassandra');
+
 const dbConfig = {
   contactPoints: ['127.0.0.1'],
   protocolOptions: { port: 9042 },
+  keyspace: 'listing',
+  queryOptions: { consistency: models.consistencies.one },
 };
-const client = new cassandra.Client(dbConfig);
 
-// *************
-// BUILD TABLES
-// *************
-client.execute(models.buildUsers);
+const ormConfig = {
+  defaultReplicationStrategy: {
+    class: 'SimpleStrategy',
+    replication_factor: 3,
+  },
+  migration: 'safe',
+};
+
+models.setDirectory(path.join(__dirname, '/models')).bindAsync({
+  clientOptions: dbConfig,
+  ormOptions: ormConfig,
+});
+// .then(() => {
+//   models.importAsync(path.join(__dirname, '../fixtures'), (err) => {
+//     console.log('Error occurred: ', err);
+//   }).then(() => {
+//     console.log('Imported seeded data');
+//   });
+// });
 
 
-// *************
-// DB ACTIONS
-// *************
 module.exports = {
   doBatch: (queries) => {
     return new Promise((resolve, reject) => {
@@ -71,7 +83,7 @@ module.exports = {
   },
   findListing: (listing_id) => {
     return new Promise((resolve, reject) => {
-      models.instance.listings.findOne({ listing_id }, (err, result) => {
+      models.instance.singlelistings.findOne({ listing_id }, (err, result) => {
         if (err) reject(err);
         resolve(result);
       });
@@ -90,19 +102,19 @@ module.exports = {
     // } else if (arguments.length === 1) {
     //   models.instance.singleListings.find()
     // } else {
-    return new Promise((resolve, reject) => {
-      const query = {
-        location,
-        overall_rating: { $gte: 1 },
-        price: { $gte: Number(priceMin), $lte: Number(priceMax) },
-        accomodation_type,
-        beds: Number(beds),
-      };
-      models.instance.listings.find(query, (err, results) => {
-        if (err) reject(err);
-        resolve(results);
+      return new Promise((resolve, reject) => {
+        const query = {
+          location,
+          overall_rating: { $gte: 1 },
+          price: { $gte: Number(priceMin), $lte: Number(priceMax) },
+          accomodation_type,
+          beds: Number(beds),
+        };
+        models.instance.listings.find(query, (err, results) => {
+          if (err) reject(err);
+          resolve(results);
+        });
       });
-    });
     // }
   }
 };

@@ -6,7 +6,7 @@ const db = require('../index.js');
 // const seedAmt = 3000000;
 // const batchAmt = 2000;
 const seedAmt = 100;
-const batchAmt = 10;
+const batchAmt = 50;
 
 const isHost = [true, false, false];
 const superhostStatus = [true, false, false];
@@ -19,7 +19,7 @@ const createUsersFile = (count) => {
       const user = username.generateUsername();
       const hostStatus = isHost[Math.floor(Math.random() * isHost.length)];
       let shstatus = false;
-      if (hostStatus) {
+      if (hostStatus === true) {
         shstatus = superhostStatus[Math.floor(Math.random() * superhostStatus.length)];
       }
 
