@@ -1,4 +1,10 @@
 module.exports = {
+  // create keyspace
+  buildKeyspace:
+  `CREATE KEYSPACE listing
+    WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3
+  };`,
+
   // any listing
   buildListings:
   `CREATE TABLE IF NOT EXISTS listing.anyListings (
@@ -87,7 +93,7 @@ module.exports = {
 
   // single user
   buildSingleUser:
-  `CREATE TABLE IF NOT EXISTS listing.users (
+  `CREATE TABLE IF NOT EXISTS listing.singleUser (
     id uuid,
     username text,
     is_host boolean PRIMARY KEY,
