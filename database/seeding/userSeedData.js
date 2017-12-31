@@ -1,12 +1,12 @@
 const faker = require('faker');
 const uuidv4 = require('uuid/v4');
-const username = require('username-generator');
+const randomName = require('random-name');
 const db = require('../index.js');
 
-// const seedAmt = 3000000;
-// const batchAmt = 2000;
-const seedAmt = 100;
-const batchAmt = 50;
+// const seedAmt = 100;
+// const batchAmt = 50;
+const seedAmt = 3000000;
+const batchAmt = 2000;
 
 const isHost = [true, false, false];
 const superhostStatus = [true, false, false];
@@ -14,9 +14,11 @@ const superhostStatus = [true, false, false];
 const createUsersFile = (count) => {
   let counter = count || 0;
   if (counter <= seedAmt) {
-    const queries = [];
+    const users = [];
     for (let i = 0; i < batchAmt; i++) {
-      const user = username.generateUsername();
+      let username = `${randomName.first()}${randomName.middle()}${(Math.floor(Math.random() * 3000))}`;
+      username = username.replace('-', '');
+      username = username.replace('\'', '');
       const hostStatus = isHost[Math.floor(Math.random() * isHost.length)];
       let shstatus = false;
       if (hostStatus === true) {
@@ -25,15 +27,14 @@ const createUsersFile = (count) => {
 
       const userObj = {
         id: uuidv4(),
-        username: user,
+        username,
         is_host: isHost[Math.floor(Math.random() * isHost.length)],
         superhost_status: shstatus,
-        updated_at: faker.date.between('2016-01-01', '2016-12-31'),
+        updated_at: JSON.stringify(faker.date.between('2016-01-01', '2016-12-31')),
       };
-      const query = db.addUser(userObj);
-      queries.push(query);
+      users.push(userObj);
     }
-    db.doBatch(queries, (err) => {
+    db.doUserBatch(users, (err) => {
       if (err) throw err;
     }).then(() => {
       counter += batchAmt;
@@ -45,6 +46,4 @@ const createUsersFile = (count) => {
   }
 };
 
-console.time('createUsersFile');
-createUsersFile();
-console.timeEnd('createUsersFile');
+module.exports.createUsersFile = createUsersFile;

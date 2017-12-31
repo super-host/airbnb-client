@@ -73,7 +73,7 @@ const blackoutDateGenerator = (numDays) => {
 const createListingsFile = (count) => {
   let counter = count || 0;
   if (counter < seedAmt) {
-    const queries = [];
+    const listings = [];
     for (let j = 0; j < batchAmt; j++) {
       const roomType = roomTypes[Math.floor(Math.random() * roomTypes.length)];
       let bedrooms;
@@ -108,26 +108,24 @@ const createListingsFile = (count) => {
         overall_rating: ratings[Math.floor(Math.random() * ratings.length)],
         accomodation_type: accomodation,
         user_id: uuidv4(),
-        updated_at: moment(faker.date.between('2015-01-01', '2016-4-30')).format('YYYY-MM-DD'),
+        updated_at: JSON.stringify(moment(faker.date.between('2015-01-01', '2016-4-30')).format('YYYY-MM-DD')),
         blackout_dates: blackoutDateGenerator(numBlackoutDays),
       };
-      const query = db.addListing(listingObj);
-      queries.push(query);
+      listings.push(listingObj);
     }
-    db.doBatch(queries, (err) => {
+    db.doListingBatch(listings, (err) => {
       if (err) throw err;
     }).then(() => {
       counter += batchAmt;
       console.log('Completed uploading batch ', counter, ' of ', seedAmt);
       setTimeout(() => {
         createListingsFile(counter);
-      }, 500);
-    });
+      }, 1000);
+    })
+      .catch((err) => {
+        throw err;
+      });
   }
 };
 
-console.time('createListingsFile');
-setTimeout(() => {
-  createListingsFile();
-}, 5000);
-console.timeEnd('createListingsFile');
+module.exports.createListingsFile = createListingsFile;
