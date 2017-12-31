@@ -1,13 +1,16 @@
 module.exports = {
   // create keyspace
   buildKeyspace:
-  `CREATE KEYSPACE listing
-    WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3
-  };`,
+  `CREATE KEYSPACE IF NOT EXISTS listing WITH REPLICATION = { 
+    'class' : 'SimpleStrategy',
+    'replication_factor' : 3 };`,
+
+  useKeyspace:
+  `USE listing;`,
 
   // any listing
   buildListings:
-  `CREATE TABLE IF NOT EXISTS listing.anyListings (
+  `CREATE TABLE IF NOT EXISTS anyListings (
     id uuid,
     location text,
     title text,
@@ -27,7 +30,7 @@ module.exports = {
 
   // listing with all criteria
   buildAllCriteria:
-  `CREATE TABLE IF NOT EXISTS listing.listings (
+  `CREATE TABLE IF NOT EXISTS listings (
     id uuid,
     location text,
     title text,
@@ -44,17 +47,21 @@ module.exports = {
     updated_at timestamp,
     blackout_dates list<text>,
     PRIMARY KEY (location, accomodation_type, beds, price)
-  );
-  
-  CREATE INDEX ON listing.listings (id);
-  CREATE INDEX ON listing.listings (price);
-  CREATE INDEX ON listing.listings (accomodation_type);
-  CREATE INDEX ON listing.listings (beds);`,
+  );`,
+
+  indexListingPrice:
+  `CREATE INDEX IF NOT EXISTS ON listings (price);`,
+
+  indexListingAcc:
+  `CREATE INDEX IF NOT EXISTS ON listings (accomodation_type);`,
+
+  indexListingBed:
+  `CREATE INDEX IF NOT EXISTS ON listings (beds);`,
 
   // listing with location only
   // materialized views for location + other attribute
   buildLocation:
-  `CREATE TABLE IF NOT EXISTS listing.location (
+  `CREATE TABLE IF NOT EXISTS location (
     id uuid,
     location text PRIMARY KEY,
     title text,
@@ -70,36 +77,48 @@ module.exports = {
     user_id uuid,
     updated_at timestamp,
     blackout_dates list<text>
-  );
+  );`,
   
-  CREATE INDEX ON listing.listings (price);
-  CREATE INDEX ON listing.listings (accomodation_type);
-  CREATE INDEX ON listing.listings (beds);`,
+  indexLocationPrice:
+  `CREATE INDEX IF NOT EXISTS ON location (price);`,
+
+  indexLocationAcc:
+  `CREATE INDEX IF NOT EXISTS ON location (accomodation_type);`,
+
+  indexLocationBed:
+  `CREATE INDEX IF NOT EXISTS ON location (beds);`,
 
   // users
   buildUsers:
-  `CREATE TABLE IF NOT EXISTS listing.users (
+  `CREATE TABLE IF NOT EXISTS users (
     id uuid,
     username text,
     is_host boolean,
     superhost_status boolean,
     updated_at timestamp,
-    PRIMARY KEY (is_host, superhost_status)
-  );
+    PRIMARY KEY (is_host, superhost_status, id)
+  );`,
 
-  CREATE INDEX ON listing.users (id);
-  CREATE INDEX ON listing.users (superhost_status);
-  CREATE INDEX ON listing.users (username);`,
+  indexUserId:
+  `CREATE INDEX IF NOT EXISTS ON users (id);`,
+ 
+  indexUserSH:
+  `CREATE INDEX IF NOT EXISTS ON users (superhost_status);`,
+
+  indexUserName:
+  `CREATE INDEX IF NOT EXISTS ON users (username);`,
 
   // single user
   buildSingleUser:
-  `CREATE TABLE IF NOT EXISTS listing.singleUser (
+  `CREATE TABLE IF NOT EXISTS singleUser (
     id uuid,
     username text,
-    is_host boolean PRIMARY KEY,
+    is_host boolean,
     superhost_status boolean,
-    updated_at timestamp
-  );
-  
-  CREATE INDEX ON listing.users (id);`,
+    updated_at timestamp,
+    PRIMARY KEY (is_host, id)
+  );`,
+
+  indexSingleUserId:
+  `CREATE INDEX IF NOT EXISTS ON singleUser (id);`,
 };
