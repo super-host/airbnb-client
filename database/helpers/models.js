@@ -21,11 +21,12 @@ module.exports = {
     bedrooms int,
     bathrooms float,
     beds int,
-    overall_rating float PRIMARY KEY,
+    overall_rating float,
     accomodation_type text,
     user_id uuid,
     updated_at timestamp,
-    blackout_dates list<text>
+    blackout_dates list<text>,
+    PRIMARY KEY (overall_rating, id)
   );`,
 
   // listing with all criteria
@@ -46,7 +47,7 @@ module.exports = {
     user_id uuid,
     updated_at timestamp,
     blackout_dates list<text>,
-    PRIMARY KEY (location, accomodation_type, beds, price)
+    PRIMARY KEY (location, accomodation_type, beds, price, id)
   );`,
 
   indexListingPrice:
@@ -63,7 +64,7 @@ module.exports = {
   buildLocation:
   `CREATE TABLE IF NOT EXISTS location (
     id uuid,
-    location text PRIMARY KEY,
+    location text,
     title text,
     description text,
     price int,
@@ -76,7 +77,8 @@ module.exports = {
     accomodation_type text,
     user_id uuid,
     updated_at timestamp,
-    blackout_dates list<text>
+    blackout_dates list<text>,
+    PRIMARY KEY (location, id)
   );`,
   
   indexLocationPrice:
