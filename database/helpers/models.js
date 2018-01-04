@@ -1,9 +1,7 @@
 module.exports = {
   // create keyspace
   buildKeyspace:
-  `CREATE KEYSPACE IF NOT EXISTS listing WITH REPLICATION = { 
-    'class' : 'SimpleStrategy',
-    'replication_factor' : 3 };`,
+  `CREATE KEYSPACE IF NOT EXISTS listing WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };`,
 
   useKeyspace:
   `USE listing;`,
@@ -26,8 +24,9 @@ module.exports = {
     user_id uuid,
     updated_at timestamp,
     blackout_dates list<text>,
-    PRIMARY KEY (overall_rating, id)
-  );`,
+    PRIMARY KEY (id, overall_rating)
+  )
+  WITH CLUSTERING ORDER BY (overall_rating DESC);`,
 
   // listing with all criteria
   buildAllCriteria:
@@ -49,15 +48,6 @@ module.exports = {
     blackout_dates list<text>,
     PRIMARY KEY (location, accomodation_type, beds, price, id)
   );`,
-
-  indexListingPrice:
-  `CREATE INDEX IF NOT EXISTS ON listings (price);`,
-
-  indexListingAcc:
-  `CREATE INDEX IF NOT EXISTS ON listings (accomodation_type);`,
-
-  indexListingBed:
-  `CREATE INDEX IF NOT EXISTS ON listings (beds);`,
 
   // listing with location only
   // materialized views for location + other attribute
