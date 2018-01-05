@@ -3,10 +3,8 @@ const moment = require('moment');
 const uuidv4 = require('uuid/v4');
 const db = require('../index.js');
 
-const seedAmt = 100;
-const batchAmt = 50;
-// const seedAmt = 7000000;
-// const batchAmt = 2000;
+const seedAmt = 7000000;
+const batchAmt = 2000;
 const priceMin = 50;
 const priceMax = 300;
 const numBlackoutDays = 10;
@@ -120,7 +118,7 @@ const createListingsFile = (count) => {
       console.log('Completed uploading batch ', counter, ' of ', seedAmt);
       setTimeout(() => {
         createListingsFile(counter);
-      }, 1000);
+      }, 500);
     })
       .catch((err) => {
         throw err;
