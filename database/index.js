@@ -1,120 +1,184 @@
-const Promise = require('bluebird');
-const path = require('path');
+const models = require('./helpers/models');
+const q = require('./helpers/queries');
 
-const models = require('express-cassandra');
+const cassandra = require('cassandra-driver');
+
+// const userSeed = require('./seeding/userSeedData');
+// const listingSeed = require('./seeding/listingSeedData');
 
 const dbConfig = {
   contactPoints: ['127.0.0.1'],
   protocolOptions: { port: 9042 },
-  keyspace: 'listing',
-  queryOptions: { consistency: models.consistencies.one },
-};
-
-const ormConfig = {
-  defaultReplicationStrategy: {
-    class: 'SimpleStrategy',
-    replication_factor: 3,
+  socketOptions: {
+    readTimeout: 0,
   },
-  migration: 'safe',
+};
+const client = new cassandra.Client(dbConfig);
+
+module.exports.client = client;
+module.exports.doUserBatch = (users) => {
+  return new Promise((resolve, reject) => {
+    users.forEach((user) => {
+      client.execute(q.addAllUsers(user))
+        .then(() => {
+          client.execute(q.addSingleUser(user))
+            .then((result) => {
+              resolve(result);
+            })
+            .catch((err) => {
+              console.log('single user: ', user);
+              reject(err);
+            });
+        })
+        .catch((err) => {
+          console.log('all users: ', user);
+          reject(err);
+        });
+    });
+  });
+};
+module.exports.doListingBatch = (listings) => {
+  return new Promise((resolve, reject) => {
+    listings.forEach((listing) => {
+      client.execute(q.addAnyListing(listing))
+        .then(() => {
+          client.execute(q.addListing(listing))
+            .then(() => {
+              client.execute(q.addLocationListings(listing))
+                .then((result) => {
+                  resolve(result);
+                })
+                .catch((err) => {
+                  reject(err);
+                });
+            })
+            .catch((err) => {
+              reject(err);
+            });
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  });
 };
 
-models.setDirectory(path.join(__dirname, '/models')).bindAsync({
-  clientOptions: dbConfig,
-  ormOptions: ormConfig,
-}).then(() => {
-  models.importAsync(path.join(__dirname, '../fixtures'), (err) => {
-    console.log('Error occurred: ', err);
-  }).then(() => {
-    console.log('Imported seeded data');
-  });
-});
 
+client.execute(models.buildKeyspace)
+  .then(() => {
+    client.execute(models.useKeyspace)
+      .then(() => {
+        // *************
+        // BUILD TABLES
+        // *************
+        client.execute(models.buildUsers)
+          .then(() => {
+            client.execute(models.indexUserId);
+            client.execute(models.indexUserName);
+            client.execute(models.indexUserSH);
+          })
+          .then(() => {
+            client.execute(models.buildSingleUser)
+              .then(() => {
+                client.execute(models.indexSingleUserId);
+              });
+              // for seeding DB with user data
+                // .then(() => {
+                //   userSeed.createUsersFile();
+                // });
+          });
+        client.execute(models.buildAllCriteria)
+          .then(() => {
+            client.execute(models.buildListings)
+              .then(() => {
+                client.execute(models.buildLocation)
+                  .then(() => {
+                    client.execute(models.indexLocationPrice);
+                    client.execute(models.indexLocationAcc);
+                    client.execute(models.indexLocationBed);
+                  // })
+                  // .then(() => {
+                  //   listingSeed.createListingsFile();
+                  });
+              });
+          });
+      });
+  });
 
 module.exports = {
-  addUser: (username) => {
-    return new Promise((resolve, reject) => {
-      const user = new models.instance.users({
-        username,
-      });
-
-      user.save((err, res) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(res);
-        console.log('Saved user!');
-      });
-    });
+  addUser: (userObj) => {
+    return (
+      client.execute(q.addAllUsers(userObj))
+        .then(() => {
+          client.execute(q.addSingleUser(userObj));
+        })
+    );
   },
   findUser: (id) => {
-    return new Promise((resolve, reject) => {
-      models.instance.users.findOne({ id }, (err, user) => {
-        if (err) reject(err);
-        resolve(user);
-      });
-    });
+    client.execute(q.findUser(id));
   },
-  addListing: (
-    location,
-    title,
-    description,
-    price,
-    maxGuests,
-    roomType,
-    bedrooms,
-    bathrooms,
-    beds,
-    overallRating,
-    accomodationType,
-    userId,
-    blackoutDates
-  ) => {
-    return new Promise((resolve, reject) => {
-      const listing = new models.instance.listings({
-        location,
-        title,
-        description,
-        price,
-        maxGuests,
-        roomType,
-        bedrooms,
-        bathrooms,
-        beds,
-        overallRating,
-        accomodationType,
-        userId,
-        blackoutDates,
-      });
-
-      listing.save((err, res) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(res);
-        console.log('Saved listing!');
-      });
-    });
+  addListing: (listingObj) => {
+    return (
+      client.execute(q.addAnyListing(listingObj))
+        .then(() => {
+          client.execute(q.addListing(listingObj))
+            .then(() => {
+              client.execute(q.addLocationListings(listingObj));
+            });
+        })
+    );
   },
-  findListing: (listingId) => {
-    return new Promise((resolve, reject) => {
-      models.instance.listings.findOne({ listingId }, (err, result) => {
-        if (err) reject(err);
-        resolve(result);
-      });
-    });
+  getListing: (location, accomodation_type, beds, listing_id) => {
+    return (
+      client.execute(q.findListing(location, accomodation_type, beds, listing_id))
+        .catch((err) => {
+          throw err;
+        })
+    );
   },
-  search: (location, priceMin = 0, priceMax, accomodationType, beds) => {
-    return new Promise((resolve, reject) => {
-      // ****
-      // SEARCH BY PRICE RANGE
-      // priceMin, priceMax
-      // ****
-      models.instance.listings.find({
-        location, accomodationType, beds
-      }, (err, results) => {
-        if (err) reject(err);
-        resolve(results);
-      });
-    });
+  search: (location, price_min, price_max, accomodation_type, beds) => {
+    if (location === 'default' && price_min === 0 && price_max === 3000 && accomodation_type === 'any' && beds === 500) {
+      return (
+        client.execute(q.generalSearch())
+          .catch((err) => {
+            throw err;
+          })
+      );
+    } else if (location !== 'default' && price_min === 0 && price_max === 3000 && accomodation_type === 'any' && beds === 500) {
+      return (
+        client.execute(q.searchLoc(location))
+          .catch((err) => {
+            throw err;
+          })
+      );
+    } else if (location !== 'default' && price_max !== 3000 && accomodation_type === 'any' && beds === 500) {
+      return (
+        client.execute(q.searchLocPrice(location, price_min, price_max))
+          .catch((err) => {
+            throw err;
+          })
+      );
+    } else if (location !== 'default' && price_min === 0 && price_max === 3000 && accomodation_type !== 'any' && beds === 500) {
+      return (
+        client.execute(q.searchLocAcc(location, accomodation_type))
+          .catch((err) => {
+            throw err;
+          })
+      );
+    } else if (location !== 'default' && price_min === 0 && price_max === 3000 && accomodation_type === 'any' && beds !== 500) {
+      return (
+        client.execute(q.searchLocBeds(location, beds))
+          .catch((err) => {
+            throw err;
+          })
+      );
+    } else {
+      return (
+        client.execute(q.searchAllCrit(location, price_min, price_max, accomodation_type, beds))
+          .catch((err) => {
+            throw err;
+          })
+      );
+    }
   },
 };
